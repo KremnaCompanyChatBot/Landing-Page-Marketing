@@ -1,27 +1,29 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity('users') 
+@Entity('customers') 
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  firstName: string; 
+  firstName: string;
 
   @Column({ nullable: true })
-  lastName: string;
+  lastName: string; 
 
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   password: string; 
 
   @Column({ nullable: true })
   companyName: string; 
+
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
 }
+

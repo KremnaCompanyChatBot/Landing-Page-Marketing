@@ -1,26 +1,33 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config'; 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 import { User } from './user/user.entity'; 
-import { CreateDateColumn, UpdateDateColumn } from 'typeorm'; 
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'sqlite', 
-      database: 'early_access_db.sqlite', 
-      
-      entities: [User], 
-      
-      synchronize: true, 
-      logging: ['error'] 
+    ConfigModule.forRoot({ 
+      isGlobal: true,
     }),
-    
-    UserModule,
+    TypeOrmModule.forRootAsync({ 
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres', 
+        host: configService.get<string>('DB_HOST', 'localhost'), 
+        port: configService.get<number>('DB_PORT', 5432),
+        username: configService.get<string>('DB_USERNAME', 'postgres'),
+        password: configService.get<string>('DB_PASSWORD', 'password'),
+        database: configService.get<string>('DB_DATABASE', 'kremna_db'),
+        entities: [User], 
+        autoLoadEntities: true, 
+      }),
+      inject: [ConfigService],
+    }),
     AuthModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

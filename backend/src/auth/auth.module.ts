@@ -1,29 +1,49 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
-import { UserModule } from '../user/user.module';
 import { AuthService } from './auth.service';
+import { UserModule } from '../user/user.module'; 
+import { PassportModule } from '@nestjs/passport'; 
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config'; // <-- Gerekli paket
+import { ConfigModule, ConfigService } from '@nestjs/config'; 
+import { JwtStrategy } from './jwt/jwt.strategy'; 
+import { GoogleStrategy } from './google/google.strategy'; 
 
 @Module({
   imports: [
-    UserModule,
-    
-    ConfigModule.forRoot({
-        isGlobal: true, 
-    }),
+    UserModule, 
+    PassportModule.register({ defaultStrategy: 'jwt' }), 
+    ConfigModule, 
+    JwtModule.registerAsync({ 
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret) {
+          throw new Error('JWT_SECRET environment variable is not set!'); 
+        }
+        const expiresInValue = configService.get<string>('JWT_EXPIRES_IN', '1h'); 
 
-    JwtModule.registerAsync({
-        imports: [ConfigModule], 
-        useFactory: async (configService: ConfigService) => ({
-            secret: configService.get<string>('JWT_SECRET'), 
-            signOptions: { expiresIn: '1h' },
-        }),
-        inject: [ConfigService], 
+        let expiresInFinal: string | number;
+        if (/^\d+$/.test(expiresInValue)) {
+            expiresInFinal = parseInt(expiresInValue, 10);
+        } else {
+            expiresInFinal = expiresInValue;
+        }
+
+        return {
+          secret: secret, 
+          signOptions: { expiresIn: expiresInFinal as any }, 
+        };
+      },
+      inject: [ConfigService], 
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService], 
-  exports: [AuthService], 
+  providers: [
+    AuthService,
+    JwtStrategy, 
+    GoogleStrategy, 
+  ],
+  exports: [AuthService, JwtModule, PassportModule], 
 })
 export class AuthModule {}
+
