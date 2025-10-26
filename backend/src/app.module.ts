@@ -1,21 +1,26 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm'; 
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { FormModule } from './form/form.module';
-import { AnalyticsModule } from './analytics/analytics.module'; 
-import { Form } from './form/form.entity';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { User } from './user/user.entity'; 
+import { CreateDateColumn, UpdateDateColumn } from 'typeorm'; 
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'sqlite', 
       database: 'early_access_db.sqlite', 
-      entities: [Form],
+      
+      entities: [User], 
+      
       synchronize: true, 
+      logging: ['error'] 
     }),
-    FormModule,
-    AnalyticsModule,
+    
+    UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
