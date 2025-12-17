@@ -13,9 +13,46 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      
-      - ./db:/docker-entrypoint-initdb.d 
-      
+      - ./db:/docker-entrypoint-initdb.d
+    networks:
+      - kremna_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: kremna_backend
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=password
+      - DB_DATABASE=kremna_db
+      - JWT_SECRET=kremna_super_secret_key_production_2024_CHANGE_THIS_IN_PRODUCTION
+      - JWT_EXPIRES_IN=7d
+      - GOOGLE_CLIENT_ID=your-google-client-id-here
+      - GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+      - GOOGLE_CALLBACK_URL=http://104.248.192.222:3000/api/google/callback
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - kremna_network
+
 volumes:
   postgres_data:
     driver: local
+
+networks:
+  kremna_network:
+    driver: bridge
