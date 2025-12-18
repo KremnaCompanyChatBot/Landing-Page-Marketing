@@ -21,6 +21,12 @@ export class UserService {
     return this.userRepository.findOne({ where: { id } });
   }
 
+ async findUserByResetToken(token: string): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { resetPasswordToken: token },
+    });
+  }
+
   async create(userData: Partial<User>): Promise<User> {
     const user = this.userRepository.create(userData);
     return this.userRepository.save(user);
