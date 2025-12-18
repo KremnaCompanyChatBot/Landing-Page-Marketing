@@ -6,7 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { User } from './user/user.entity';
+import { User } from './user/entities/user.entity';
 import { MailModule } from './mail/mail.module';
 
 @Module({
@@ -15,14 +15,14 @@ import { MailModule } from './mail/mail.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    
+
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (config: ConfigService) => ({
         transport: {
           host: config.get('MAIL_HOST'),
           port: config.get<number>('MAIL_PORT', 587),
-          secure: false, 
+          secure: false,
           auth: {
             user: config.get('MAIL_USER'),
             pass: config.get('MAIL_PASS'),
@@ -32,7 +32,10 @@ import { MailModule } from './mail/mail.module';
           },
         },
         defaults: {
-          from: config.get('MAIL_FROM', '"Kremna Support" <no-reply@kremna.com>'),
+          from: config.get(
+            'MAIL_FROM',
+            '"Kremna Support" <no-reply@kremna.com>',
+          ),
         },
       }),
       inject: [ConfigService],
@@ -49,14 +52,14 @@ import { MailModule } from './mail/mail.module';
         database: configService.get<string>('DB_DATABASE', 'kremna_db'),
         entities: [User],
         autoLoadEntities: true,
-        synchronize: true, 
+        synchronize: true,
       }),
       inject: [ConfigService],
     }),
 
     AuthModule,
     UserModule,
-    MailModule, 
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,93 +1,126 @@
-import { Controller, Post, Body, Get, UseGuards, Req, Res, HttpStatus, HttpCode, UnauthorizedException } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport'; 
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  Req,
+  HttpStatus,
+  HttpCode,
+  BadRequestException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserService } from '../user/user.service'; 
+import { UserService } from '../user/user.service';
+import { JwtAuthGuard } from './jwt/jwt-auth.guard';
 import * as bcrypt from 'bcryptjs';
-import { JwtAuthGuard } from './jwt/jwt-auth.guard'; 
-import { GoogleOAuthGuard } from './google/google-oauth.guard'; 
 
-@Controller('api') 
+@Controller('api')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly userService: UserService, 
+    private readonly userService: UserService,
   ) {}
 
+  /**
+   * POST /api/register
+   * Creates a new user in the 'customers' table.
+   */
   @Post('register')
-  @HttpCode(HttpStatus.CREATED) 
-  async register(@Body() body: any) {
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() body: any = {}) {
     const { email, password, firstName, lastName, companyName } = body;
+
+    if (!email || !password) {
+      throw new BadRequestException('Email and password are required.');
+    }
 
     const existingUser = await this.userService.findOneByEmail(email);
     if (existingUser) {
-      return { success: false, message: 'This email is already registered.' };
+      return {
+        success: false,
+        message: 'This email is already registered.',
+      };
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10); 
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     await this.userService.create({
       firstName,
       lastName,
       email,
       companyName,
-      password: hashedPassword, 
+      password: hashedPassword,
     });
 
-    return { success: true, message: 'Hesap başarıyla oluşturuldu' };
-  }
-
-  // POST /api/login
-  @Post('login')
-  @HttpCode(HttpStatus.OK) 
-  async login(@Body() body: any) {
-    const { email, password } = body;
-    const authResult = await this.authService.login(email, password);
-    return authResult; 
-  }
-
-  @UseGuards(JwtAuthGuard) 
-  @Get('user')
-  @HttpCode(HttpStatus.OK)
-  getUserInfo(@Req() req) {
-    if (!req.user) {
-        throw new UnauthorizedException('User not found after guard validation');
-    }
     return {
-        user: {
-            id: req.user.id,
-            firstName: req.user.firstName,
-            lastName: req.user.lastName,
-            email: req.user.email,
-            companyName: req.user.companyName
-        }
+      success: true,
+      message: 'Account created successfully.',
     };
   }
 
-  @UseGuards(JwtAuthGuard) 
-  @Post('logout')
+  /**
+   * POST /api/login
+   * Validates credentials and returns a JWT token.
+   */
+  @Post('login')
   @HttpCode(HttpStatus.OK)
-  logout(@Req() req) {
-    console.log(`User ${req.user.email} logged out.`); 
-    return { success: true, message: 'Başarıyla çıkış yapıldı' };
-  }
-
-
-  @Get('google')
-  @UseGuards(GoogleOAuthGuard) 
-  async googleAuth(@Req() req) {
-  }
-
-  @Get('google/callback')
-  @UseGuards(GoogleOAuthGuard) 
-  googleAuthRedirect(@Req() req, @Res() res) {
-    if (!req.user) {
-        return res.redirect('http://localhost:5173/login-failure'); // Örnek URL
+  async login(@Body() body: any = {}) {
+    if (!body || !body.email || !body.password) {
+      throw new BadRequestException('Email and password are required.');
     }
 
-    const { token } = this.authService.generateJwtToken(req.user);
+    return this.authService.login(body.email, body.password);
+  }
 
-    const frontendCallbackUrl = `http://localhost:5173/auth/callback#token=${token}`; // Örnek frontend callback URL'si
-    return res.redirect(frontendCallbackUrl);
+  /**
+   * POST /api/auth/google
+   * Validates a Google ID Token and performs login/signup.
+   */
+  @Post('auth/google')
+  @HttpCode(HttpStatus.OK)
+  async googleLogin(@Body() body: any = {}) {
+    const { googleToken } = body;
+    if (!googleToken) {
+      throw new BadRequestException('googleToken is required.');
+    }
+    return this.authService.validateGoogleTokenAndLogin(googleToken);
+  }
+
+  /**
+   * GET /api/user
+   * Returns current logged-in user info (via JWT).
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('user')
+  @HttpCode(HttpStatus.OK)
+  async getUserInfo(@Req() req) {
+    // req.user is populated by JwtStrategy
+    const user = await this.userService.findOneById(req.user.id);
+
+    return {
+      user: {
+        id: user?.id,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        email: user?.email,
+        companyName: user?.companyName,
+        fullName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+      },
+    };
+  }
+
+  /**
+   * POST /api/logout
+   * Placeholder for logout (usually handled on frontend by removing token).
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout() {
+    return {
+      success: true,
+      message: 'Logged out successfully.',
+    };
   }
 }
-

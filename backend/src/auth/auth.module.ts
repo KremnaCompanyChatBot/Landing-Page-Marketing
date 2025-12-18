@@ -47,16 +47,8 @@ import { MailModule } from '../mail/mail.module';
 
   controllers: [AuthController],
 
-  providers: [
-    AuthService,
-    JwtStrategy,
-    GoogleStrategy,
-  ],
+  providers: [AuthService, JwtStrategy, GoogleStrategy],
 
-  exports: [
-    AuthService,
-    JwtModule,
-    PassportModule,
-  ],
+  exports: [AuthService, JwtModule, PassportModule],
 })
 export class AuthModule {}
