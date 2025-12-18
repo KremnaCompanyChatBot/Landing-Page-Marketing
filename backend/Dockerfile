@@ -5,10 +5,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 RUN npm install
-...
-RUN npm install --omit=dev
 
-# Copy source and build
+# Copy source code
 COPY . .
 RUN npm run build
 
@@ -17,7 +15,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 COPY --from=builder /app/dist ./dist
 
