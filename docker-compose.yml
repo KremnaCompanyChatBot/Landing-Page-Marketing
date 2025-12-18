@@ -1,58 +1,51 @@
-version: '3.8'
+version: "3.8"
 
 services:
   db:
     image: postgres:15-alpine
     container_name: kremna_postgres_db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: kremna_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     ports:
-      - '5432:5432'
+      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db:/docker-entrypoint-initdb.d
-    networks:
-      - kremna_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - kremna-network
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
     container_name: kremna_backend
-    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
-      - '3000:3000'
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=password
-      - DB_DATABASE=kremna_db
-      - JWT_SECRET=kremna_super_secret_key_production_2024_CHANGE_THIS_IN_PRODUCTION
-      - JWT_EXPIRES_IN=7d
-      - GOOGLE_CLIENT_ID=your-google-client-id-here
-      - GOOGLE_CLIENT_SECRET=your-google-client-secret-here
-      - GOOGLE_CALLBACK_URL=http://104.248.192.222:3000/api/google/callback
+      - 3000:3000
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
     networks:
-      - kremna_network
+      - kremna-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   postgres_data:
-    driver: local
 
 networks:
-  kremna_network:
+  kremna-network:
     driver: bridge
