@@ -1,10 +1,20 @@
-import { Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../user/user.entity';
+import * as crypto from 'crypto';
+import { MoreThan } from 'typeorm';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +25,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly mailService: MailService,   // 🔵 eklendi
   ) {
     const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
     if (googleClientId) {
@@ -33,9 +44,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    if (!user.password || user.password === 'GOOGLE_SIGNUP_PLACEHOLDER') { 
-        this.logger.warn(`Login failed: User ${email} registered via Google, password login disabled.`);
-        throw new UnauthorizedException('Please log in using your Google account.');
+    if (!user.password || user.password === 'GOOGLE_SIGNUP_PLACEHOLDER') {
+      this.logger.warn(
+        `Login failed: User ${email} registered via Google, password login disabled.`,
+      );
+      throw new UnauthorizedException(
+        'Please log in using your Google account.',
+      );
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -51,29 +66,30 @@ export class AuthService {
   }
 
   generateJwtToken(user: Partial<User>) {
-     const payload = {
-       sub: user.id,
-       email: user.email,
-       companyName: user.companyName,
-     };
-     const token = this.jwtService.sign(payload);
-     return {
-       success: true,
-       token,
-       user: {
-         id: user.id,
-         firstName: user.firstName,
-         lastName: user.lastName,
-         email: user.email,
-         companyName: user.companyName,
-       },
-     };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      companyName: user.companyName,
+    };
+    const token = this.jwtService.sign(payload);
+    return {
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        companyName: user.companyName,
+      },
+    };
   }
-
 
   async validateGoogleTokenAndLogin(googleToken: string): Promise<any> {
     if (!this.googleClient) {
-        throw new InternalServerErrorException('Google Client is not configured.');
+      throw new InternalServerErrorException(
+        'Google Client is not configured.',
+      );
     }
     try {
       this.logger.log('Verifying Google token...');
@@ -92,32 +108,44 @@ export class AuthService {
       const userResult = await this.findOrCreateGoogleUser(googleUser);
       const tokenResponse = this.generateJwtToken(userResult.user);
       return { ...tokenResponse, isNewUser: userResult.isNewUser };
-
     } catch (error) {
-      this.logger.error(`Error verifying Google token: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Could not verify Google token', error.message);
+      this.logger.error(
+        `Error verifying Google token: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        'Could not verify Google token',
+        error.message,
+      );
     }
   }
 
-  async findOrCreateGoogleUser(googleProfile: any): Promise<{ user: User, isNewUser: boolean }> {
-    this.logger.log(`Finding or creating user for Google email: ${googleProfile.email}`);
+  async findOrCreateGoogleUser(
+    googleProfile: any,
+  ): Promise<{ user: User; isNewUser: boolean }> {
+    this.logger.log(
+      `Finding or creating user for Google email: ${googleProfile.email}`,
+    );
     try {
       let user = await this.userService.findOneByEmail(googleProfile.email);
       let isNewUser = false;
 
       if (!user) {
-        this.logger.log(`Creating new user via Google: ${googleProfile.email}`);
+        this.logger.log(
+          `Creating new user via Google: ${googleProfile.email}`,
+        );
         isNewUser = true;
 
-        const firstName = googleProfile.given_name || googleProfile.name || 'Google';
+        const firstName =
+          googleProfile.given_name || googleProfile.name || 'Google';
         const lastName = googleProfile.family_name || 'User';
 
         user = await this.userService.create({
           email: googleProfile.email,
           firstName: firstName,
           lastName: lastName,
-          password: 'GOOGLE_SIGNUP_PLACEHOLDER', 
-          companyName: undefined, 
+          password: 'GOOGLE_SIGNUP_PLACEHOLDER',
+          companyName: undefined,
         });
 
         this.logger.log(`New user created with ID: ${user.id}`);
@@ -126,9 +154,62 @@ export class AuthService {
       }
       return { user, isNewUser };
     } catch (error) {
-      this.logger.error(`Error finding/creating Google user: ${error.message}`, error.stack);
-      throw new InternalServerErrorException(`Could not process google user: ${error.message}`, error.message);
+      this.logger.error(
+        `Error finding/creating Google user: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        `Could not process google user: ${error.message}`,
+        error.message,
+      );
     }
   }
-}
 
+ 
+  async forgotPassword(email: string) {
+    this.logger.log(`Password reset requested for: ${email}`);
+
+    const user = await this.userService.findOneByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 saat
+
+    await this.userService.update(user.id, {
+      resetPasswordToken: token,
+      resetPasswordExpires: expires,
+    });
+
+    const link = `${this.configService.get(
+      'FRONTEND_URL',
+    )}/reset-password?token=${token}`;
+
+    await this.mailService.sendPasswordReset(user.email, link);
+
+    return { message: 'Password reset email sent' };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.userService.findUserByResetToken(token);
+
+    if (
+      !user ||
+      !user.resetPasswordExpires ||
+      user.resetPasswordExpires < new Date()
+    ) {
+      throw new BadRequestException('Token invalid or expired');
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await this.userService.update(user.id, {
+      password: hashed,
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
+    });
+
+    return { message: 'Password has been reset' };
+  }
+}
