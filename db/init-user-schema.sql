@@ -1,15 +1,19 @@
-DROP TABLE IF EXISTS customers; 
+DROP TABLE IF EXISTS customers;
 
 CREATE TABLE customers (
     id SERIAL PRIMARY KEY,
-    "firstName" character varying NOT NULL,
+    "firstName" character varying,
     "lastName" character varying,
     email character varying UNIQUE NOT NULL,
-    password character varying NOT NULL, 
+    password character varying,
     "companyName" character varying,
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now()
+
+    "phoneNumber" character varying,
+    "resetPasswordToken" character varying,
+    "resetPasswordExpires" TIMESTAMP WITH TIME ZONE,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE UNIQUE INDEX idx_customer_email ON customers (email);
-
