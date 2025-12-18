@@ -4,7 +4,9 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci
+RUN npm install
+...
+RUN npm install --omit=dev
 
 # Copy source and build
 COPY . .
