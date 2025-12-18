@@ -32,8 +32,7 @@ with:
   context: .
   file: ./Dockerfile
   push: true
-  tags: ghcr.io/kremnacompanychatbot/landing-page-marketing-backend:latest
-
+tags: ghcr.io/kremnacompanychatbot/landing-page-marketing-backend:latest
       - name: Deploy to Server
 if: github.ref == 'refs/heads/feature/backend-version3'
         uses: appleboy/ssh-action@v1.0.0
