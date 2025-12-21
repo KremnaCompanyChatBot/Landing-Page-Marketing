@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: kremna_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: KremnaDB2024Secure!
+      POSTGRES_DB: kremna_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d
+    networks:
+      - kremna_network
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: kremna_backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    networks:
+      - kremna_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://167.99.141.138/api
+    container_name: kremna_frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    networks:
+      - kremna_network
+    depends_on:
+      - backend
+
+networks:
+  kremna_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
