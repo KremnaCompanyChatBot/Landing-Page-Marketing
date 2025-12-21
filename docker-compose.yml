@@ -1,62 +1,54 @@
-version: '3.8'
+name: Deploy to DigitalOcean
 
-services:
-  db:
-    image: postgres:15-alpine
-    container_name: kremna_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: KremnaDB2024Secure!
-      POSTGRES_DB: kremna_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db:/docker-entrypoint-initdb.d
-    networks:
-      - kremna_network
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - pg_isready -U postgres
-      interval: 10s
-      timeout: 5s
-      retries: 5
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: kremna_backend
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    depends_on:
-      db:
-        condition: service_healthy
-    env_file:
-      - ./backend/.env
-    networks:
-      - kremna_network
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: http://167.99.141.138/api
-    container_name: kremna_frontend
-    restart: unless-stopped
-    ports:
-      - "8080:80"
-    networks:
-      - kremna_network
-    depends_on:
-      - backend
-
-networks:
-  kremna_network:
-    driver: bridge
-
-volumes:
-  postgres_data:
-    driver: local
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cd /var/www/kremna
+            
+            echo "🚀 Starting deployment..."
+            
+            echo "🔄 Pulling backend code..."
+            rm -rf temp-backend
+            git clone -b backend-v3 https://github.com/KremnaCompanyChatBot/Landing-Page-Marketing.git temp-backend
+            rm -rf backend/src backend/package.json
+            cp -r temp-backend/backend/src backend/
+            cp temp-backend/backend/package.json backend/
+            rm -rf temp-backend
+            
+            echo "🔄 Pulling frontend code..."
+            rm -rf temp-frontend
+            git clone -b feature/frontend-version2 https://github.com/KremnaCompanyChatBot/Landing-Page-Marketing.git temp-frontend
+            rm -rf frontend/src frontend/public frontend/package.json
+            cp -r temp-frontend/src frontend/
+            cp -r temp-frontend/public frontend/
+            cp temp-frontend/package.json frontend/
+            rm -rf temp-frontend
+            
+            echo "🐳 Rebuilding containers..."
+            docker-compose down
+            docker-compose build --no-cache
+            docker-compose up -d
+            
+            echo "🧹 Cleaning up..."
+            docker system prune -f
+            
+            echo "✅ Deployment completed!"
+            docker ps
