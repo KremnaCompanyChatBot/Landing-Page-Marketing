@@ -27,7 +27,7 @@ jobs:
             
             echo "🔄 Pulling backend code..."
             rm -rf temp-backend
-            git clone -b backend-v3 https://github.com/KremnaCompanyChatBot/Landing-Page-Marketing.git temp-backend
+            git clone -b backend-v4 https://github.com/KremnaCompanyChatBot/Landing-Page-Marketing.git temp-backend
             rm -rf backend/src backend/package.json
             cp -r temp-backend/backend/src backend/
             cp temp-backend/backend/package.json backend/
