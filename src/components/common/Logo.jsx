@@ -1,15 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+// تأكد أن اسم الصورة ومسارها صحيح في جهازك
+import logoImg from '../../assets/images/logoK.png'; 
 
 const Logo = () => {
   return (
-    <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-      <div className="w-6 h-6 bg-black flex items-center justify-center">
-        <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </div>
-      <span className="font-semibold text-lg">Kremna Company</span>
+    <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      {/* هنا وضعنا الصورة بدلاً من الـ SVG */}
+      <img 
+        src={logoImg} 
+        alt="Kremna Logo" 
+        className="w-10 h-10 object-contain" 
+      />
+      {/* اسم الشركة */}
+      <span className="font-bold text-xl text-gray-900">Kremna Company</span>
     </Link>
   );
 };

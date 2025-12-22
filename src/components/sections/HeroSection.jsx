@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Button from '../common/Button';
 
 const HeroSection = () => {
   const navigate = useNavigate();
-  
+
   return (
     <section className="bg-gray-50 py-16 md:py-24">
       <div className="container mx-auto px-4">
@@ -18,26 +19,24 @@ const HeroSection = () => {
               All-in-one platform to create and manage intelligent assistants websites and apps with a powerful and easy-to-use tool.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button onClick={() => navigate('/signup')}>
+              <Button variant="primary" onClick={() => navigate('/signup')}>
                 Let's get started
               </Button>
               <Button variant="secondary">
-                Read how it Works
+                Read how it works
               </Button>
             </div>
           </div>
-          
-          {/* Right Content - Video Placeholder */}
+
+          {/* Right Content - Lottie Animation */}
           <div className="order-1 md:order-2">
-            <div className="bg-white rounded-2xl shadow-lg p-8 aspect-video flex items-center justify-center hover:shadow-xl transition-shadow">
-              <div className="text-center">
-                <div className="w-24 h-24 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors cursor-pointer">
-                  <svg className="w-12 h-12 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                </div>
-                <p className="text-gray-500 text-sm font-medium">Demo Video</p>
-              </div>
+            <div className="">
+              <DotLottieReact
+                src="https://lottie.host/63902443-15fe-4e93-876d-c352e9cb7e40/9vAjFwNZza.lottie"
+                loop
+                autoplay
+                className="w-full h-full transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer"
+              />
             </div>
           </div>
         </div>
@@ -47,3 +46,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+

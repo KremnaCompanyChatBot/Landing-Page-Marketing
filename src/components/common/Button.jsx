@@ -1,26 +1,25 @@
+// src/components/common/Button.jsx
 import React from 'react';
 
 const Button = ({ 
   children, 
   variant = 'primary', 
-  type = 'button', 
   onClick, 
-  className = '', 
-  fullWidth = false 
+  className = '',
+  ...props 
 }) => {
-  const baseStyles = 'px-6 py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'font-medium transition-all duration-300 border-2 border-black';
   
   const variants = {
-    primary: 'bg-[#4ECDC4] text-white hover:bg-[#3db8af] active:bg-[#2da39a]',
-    secondary: 'bg-white text-black border-2 border-black hover:bg-gray-50 active:bg-gray-100',
-    outline: 'bg-transparent text-black border border-gray-300 hover:bg-gray-50 active:bg-gray-100'
+    primary: 'bg-[#94E4E4] text-black hover:bg-[#7dd4d4] w-[216px] h-[56px] rounded-[20px] px-4',
+    secondary: 'bg-transparent text-black hover:bg-gray-50 w-[236px] h-[56px] rounded-[20px] px-4'
   };
-  
+
   return (
     <button
-      type={type}
+      className={`${baseStyles} ${variants[variant]} ${className}`}
       onClick={onClick}
-      className={`${baseStyles} ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      {...props}
     >
       {children}
     </button>

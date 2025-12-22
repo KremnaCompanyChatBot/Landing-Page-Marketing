@@ -1,81 +1,103 @@
-// API configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://167.99.141.138/api';
 
-// Helper function for making API requests
+/* ===================== GENERIC API HELPER ===================== */
+
 const apiRequest = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`;
   
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  const hasBody = !!options.body;
+
   const config = {
+    method: options.method || 'GET',
     headers: {
-      'Content-Type': 'application/json',
+      ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
       ...options.headers,
     },
-    ...options,
+    ...(hasBody ? { body: options.body } : {}),
   };
-  
-  try {
-    const response = await fetch(url, config);
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || 'Something went wrong');
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('API Error:', error);
-    throw error;
+
+  const response = await fetch(url, config);
+
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Request failed');
   }
+
+  return data;
 };
 
-// Auth API calls
+/* ===================== AUTH API ===================== */
+
+
 export const authAPI = {
-  login: async (credentials) => {
-    return apiRequest('/auth/login', {
+  login: async (credentials) =>
+    apiRequest('/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
-    });
-  },
-  
-  signup: async (userData) => {
-    return apiRequest('/auth/signup', {
+    }),
+
+  register: async (userData) =>
+    apiRequest('/register', {
       method: 'POST',
       body: JSON.stringify(userData),
-    });
-  },
-  
-  logout: async () => {
-    return apiRequest('/auth/logout', {
-      method: 'POST',
-    });
-  },
-  
-  forgotPassword: async (email) => {
-    return apiRequest('/auth/forgot-password', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
-  },
-};
+    }),
 
-// User API calls
-export const userAPI = {
-  getProfile: async (token) => {
-    return apiRequest('/user/profile', {
+  logout: async (token) =>
+    apiRequest('/logout', {
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    }),
+    forgotPassword: async (email) =>
+    apiRequest('/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+};
+
+/* ===================== USER API ===================== */
+
+export const userAPI = {
+  getProfile: async (token) =>
+    apiRequest('/user/profile', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }),
+
+  updateProfile: async (token, userData) => {
+    if (!userData || Object.keys(userData).length === 0) {
+      throw new Error('Profile data is empty');
+    }
+
+    // تأمين التوكن (منع Bearer Bearer)
+    const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
+
+    return apiRequest('/user/profile', {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${cleanToken}`,
+      },
+      body: JSON.stringify(userData),
     });
   },
-  
-  updateProfile: async (token, userData) => {
-    return apiRequest('/user/profile', {
+
+  changePassword: async (token, passwordData) =>
+    apiRequest('/user/change-password', {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(userData),
-    });
-  },
+      body: JSON.stringify({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword,
+      }),
+    }),
 };
-
