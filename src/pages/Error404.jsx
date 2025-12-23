@@ -1,37 +1,59 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/common/Logo';
-import Button from '../components/common/Button';
 import Footer from '../components/layout/Footer';
+
+// ملاحظة هامة: تأكدي من أن اسم الصورة هنا يطابق الاسم الموجود لديك في المجلد
+// افترضت أن المسار هو نفس مسار الصور المعتاد (assets/images)
+import ErrorImage from '../assets/images/error.png'; 
 
 const Error404 = () => {
   const navigate = useNavigate();
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       <header className="bg-white border-b border-gray-200 py-4">
         <div className="container mx-auto px-4">
           <Logo />
         </div>
       </header>
       
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
-        <div className="text-center px-4">
-          <svg className="w-32 h-32 mx-auto mb-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center px-4 flex flex-col items-center">
           
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          {/* 1. عرض الصورة بدلاً من الأيقونة */}
+          <img 
+            src={ErrorImage} 
+            alt="Error Robot" 
+            className="w-64 h-auto mb-6 object-contain"
+          />
+          
+          {/* 2. النصوص بتنسيق عريض ومشابه للصورة */}
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
             Something went wrong.
           </h1>
           
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-2xl md:text-3xl font-bold text-gray-900 mb-10">
             Please try again later.
           </p>
           
-          <Button variant="secondary" onClick={() => navigate('/')}>
+          {/* 3. الزر المخصص بتأثير التركواز */}
+          <button 
+            onClick={() => navigate('/')}
+            className="
+              px-10 py-3 
+              border-2 border-black 
+              rounded-full 
+              text-lg font-semibold 
+              text-black
+              transition-all duration-300 
+              hover:bg-[#40E0D0] hover:border-[#40E0D0] hover:text-white
+              active:bg-[#3bcbc0]
+            "
+          >
             Home Page
-          </Button>
+          </button>
+
         </div>
       </div>
       
