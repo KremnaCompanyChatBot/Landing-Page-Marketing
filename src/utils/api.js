@@ -4,9 +4,7 @@ const API_BASE_URL =
 /* ===================== GENERIC API HELPER ===================== */
 
 const apiRequest = async (endpoint, options = {}) => {
-  
   const url = `${API_BASE_URL}${endpoint}`;
-
   const hasBody = !!options.body;
 
   const config = {
@@ -19,19 +17,22 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   const response = await fetch(url, config);
-
   const text = await response.text();
+  
+
   const data = text ? JSON.parse(text) : {};
 
+  
   if (!response.ok) {
-    throw new Error(data.message || 'Request failed');
+
+    const errorMessage = data.message || data.error || 'Request failed';
+    throw new Error(errorMessage);
   }
 
   return data;
 };
 
 /* ===================== AUTH API ===================== */
-
 
 export const authAPI = {
   login: async (credentials) =>
@@ -53,11 +54,16 @@ export const authAPI = {
         Authorization: `Bearer ${token}`,
       },
     }),
-    forgotPassword: async (email) =>
-    apiRequest('/forgot-password', {
+
+
+  forgotPassword: async (email) => {
+    const response = await apiRequest('/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
-    }),
+    });
+    
+    return response;
+  },
 };
 
 /* ===================== USER API ===================== */
@@ -76,7 +82,7 @@ export const userAPI = {
       throw new Error('Profile data is empty');
     }
 
-    // تأمين التوكن (منع Bearer Bearer)
+
     const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
 
     return apiRequest('/user/profile', {

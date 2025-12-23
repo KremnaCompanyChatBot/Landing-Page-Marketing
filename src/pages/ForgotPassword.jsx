@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Logo from '../components/common/Logo';
 import Footer from '../components/layout/Footer';
 import { authAPI } from '../utils/api';
 
@@ -38,13 +37,16 @@ const ForgotPassword = () => {
     try {
       console.log('📧 Sending password reset email to:', email);
       
-      // ✅ استدعاء API الجديد
       const response = await authAPI.forgotPassword(email);
       
-      console.log('✅ Reset email sent successfully:', response);
+      console.log('✅ Reset email response:', response);
       
-      // If successful
-      setIsSubmitted(true);
+      // ✅ التحقق من success في الـ response
+      if (response.success || response.message) {
+        setIsSubmitted(true);
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
       
     } catch (err) {
       console.error('❌ Forgot password error:', err);
@@ -74,10 +76,10 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
       
       {/* Main Content */}
-      <div className="flex-grow flex items-center justify-center px-4 py-12 relative z-10">
+      <div className="flex-grow flex items-center justify-center px-4 py-12">
         <motion.div
           className="w-full max-w-[500px] bg-white rounded-[20px] shadow-lg p-8 md:p-12"
           initial="hidden"
