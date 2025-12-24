@@ -99,7 +99,7 @@ const FeaturesSection = () => {
   );
 
   return (
-    <section ref={sectionRef} className="py-28 bg-white overflow-hidden">
+    <section id="features" ref={sectionRef} className="py-28 bg-white overflow-hidden">
       <div className="container mx-auto px-6">
         <div className="max-w-7xl mx-auto">
          
@@ -112,7 +112,7 @@ const FeaturesSection = () => {
           </div>
 
           {/* Bottom Row - 2 Columns Centered */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[calc(66.666%-1rem)] mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:max-w-[calc(66.666%-1rem)] mx-auto">
             {bottomRowFeatures.map((feature, index) => (
               <FeatureCard key={feature.id} feature={feature} index={index} delayOffset={3} />
             ))}

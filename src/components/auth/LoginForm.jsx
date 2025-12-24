@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI, userAPI } from '../../utils/api';
+import { trackAuthEvent, trackFormEvent } from '../../utils/analytics';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -23,6 +24,9 @@ const LoginForm = () => {
     setErrors({});
     setSuccess('');
 
+    // Track form start
+    trackFormEvent('login_form', 'submit');
+
     const newErrors = {};
 
     if (!loginData.email) {
@@ -37,6 +41,8 @@ const LoginForm = () => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      // Track form validation error
+      trackFormEvent('login_form', 'error', 'validation_error');
       return;
     }
 
@@ -68,6 +74,9 @@ const LoginForm = () => {
 
       setSuccess('Login successful. Redirecting...');
 
+      // Track successful login
+      trackAuthEvent('login', 'success');
+
       setTimeout(() => {
         navigate('/');
         window.location.reload();
@@ -77,6 +86,10 @@ const LoginForm = () => {
       setErrors({
         general: error.message || 'Invalid email or password',
       });
+
+      // Track failed login
+      trackAuthEvent('login', 'failed');
+      trackFormEvent('login_form', 'error', 'api_error');
     } finally {
       setIsLoading(false);
     }

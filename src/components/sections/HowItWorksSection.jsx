@@ -1,13 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import iconPath from '../../assets/icons/gg.png';
 
 const HowItWorksSection = () => {
-  // لكي تظهر الصورة في المتصفح، يجب استخدام رابط مباشر أو استيراد الصورة.
-  // في جهازك المحلي، استخدم السطر التالي بدلاً من الرابط:
-
-  
-  // مؤقتاً وضعت هذا الرابط لكي تظهر الصورة أمامك الآن وتتأكد أن التصميم يعمل
-  
+  const navigate = useNavigate();
 
   const steps = [
     {
@@ -25,40 +21,34 @@ const HowItWorksSection = () => {
   ];
 
   return (
-    <section className="bg-[#E0F7FA] py-20 font-roboto overflow-hidden">
+    <section id="how-it-works" className="bg-[#E0F7FA] py-20 font-roboto overflow-hidden">
       <div className="container mx-auto px-4 flex flex-col items-center">
-        
-        {/* --- القسم العلوي (العناوين) --- */}
+
         <div className="flex flex-col items-center gap-8 mb-12 w-full max-w-[1240px]">
-          
-          {/* حاوية الأيقونة والعنوان */}
+
           <div className="flex items-center justify-center gap-6 relative">
-            
-            {/* حاوية الأيقونة */}
+
             <div className="relative w-[50px] h-[50px] flex items-center justify-center">
-              
-              {/* المربع الرمادي الخلفي (حسب مقاسات فيجما الدقيقة) */}
-              <div 
+
+              <div
                 className="absolute bg-[#0F0F0F] opacity-20"
                 style={{
                   width: '50px',
                   height: '49px',
-                  transform: 'rotate(180deg)', // تدوير المربع
+                  transform: 'rotate(180deg)',
                   borderTopLeftRadius: '18px',
                   borderTopRightRadius: '5px',
                   borderBottomRightRadius: '10px',
                   borderBottomLeftRadius: '5px',
-                  // ضبط الموقع ليكون خلف الصورة مع الإزاحة المطلوبة
-                  top: '-10px', 
+                  top: '-10px',
                   left: '12px',
                   zIndex: 0
                 }}
               ></div>
 
-              {/* عرض الصورة */}
-              <img 
-                src={iconPath} 
-                alt="Spiral Icon" 
+              <img
+                src={iconPath}
+                alt="Spiral Icon"
                 className="relative z-10 w-full h-full object-contain"
                 style={{
                   width: '50px',
@@ -67,8 +57,7 @@ const HowItWorksSection = () => {
               />
             </div>
 
-            {/* العنوان الرئيسي */}
-            <h2 
+            <h2
               className="font-bold text-black tracking-[0px]"
               style={{
                 fontSize: '42px',
@@ -81,21 +70,19 @@ const HowItWorksSection = () => {
             </h2>
           </div>
 
-          {/* العنوان الفرعي الأول */}
-          <h3 
+          <h3
             className="text-center font-bold text-black"
             style={{
-              fontSize: '32px', 
+              fontSize: '32px',
               maxWidth: '1206px',
               lineHeight: '35px',
               fontFamily: 'Roboto, sans-serif'
             }}
           >
-            It’s simpler than you think.
+            It's simpler than you think.
           </h3>
 
-          {/* العنوان الفرعي الثاني */}
-          <p 
+          <p
             className="text-center font-bold text-black"
             style={{
               fontSize: '20px',
@@ -108,24 +95,22 @@ const HowItWorksSection = () => {
           </p>
         </div>
 
-        {/* --- قائمة الخطوات --- */}
-        <div className="flex flex-col gap-6 w-full max-w-[800px]">
+        {/* Steps with improved styling */}
+        <div className="flex flex-col gap-6 w-full max-w-[900px] mb-10">
           {steps.map((step, index) => (
-            <div 
-              key={step.id} 
-              className="flex items-start gap-4 w-full"
+            <div
+              key={step.id}
+              className="flex items-start gap-4 w-full bg-white/50 rounded-xl p-5 hover:bg-white hover:shadow-md transition-all duration-300 cursor-default border-l-4 border-transparent hover:border-[#4ECDC4]"
             >
-              {/* أيقونة الخطوة (نسخة مصغرة من الصورة) */}
               <div className="mt-1 flex-shrink-0" style={{ width: '24px', height: '24px', opacity: 0.8 }}>
-                <img 
-                  src={iconPath} 
-                  alt="step icon" 
-                  className="w-full h-full object-contain" 
+                <img
+                  src={iconPath}
+                  alt="step icon"
+                  className="w-full h-full object-contain"
                 />
               </div>
 
-              {/* نص الخطوة */}
-              <p 
+              <p
                 className="text-gray-900"
                 style={{
                   fontSize: '18px',
@@ -135,10 +120,23 @@ const HowItWorksSection = () => {
                   textAlign: 'left'
                 }}
               >
+                <span className="font-bold text-[#7B18C7] mr-2">Step {step.id}:</span>
                 {step.text}
               </p>
             </div>
           ))}
+        </div>
+
+        {/* Simple CTA */}
+        <div className="flex flex-col items-center gap-3 mt-4">
+          <p className="text-gray-700 text-base">Ready to get started?</p>
+          <button
+            onClick={() => navigate('/signup')}
+            className="px-8 py-3 bg-gray-900 text-white font-semibold rounded-full hover:bg-[#7B18C7] transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105"
+          >
+            Create Your Assistant
+          </button>
+          <p className="text-sm text-gray-500">No credit card required</p>
         </div>
 
       </div>

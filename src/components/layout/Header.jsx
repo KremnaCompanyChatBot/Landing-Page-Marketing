@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../common/Logo';
 import { authAPI } from '../../utils/api';
+import { trackCTAClick, trackAuthEvent } from '../../utils/analytics';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -53,30 +54,44 @@ const Header = () => {
 
   const handleLogout = async () => {
     console.log("🚪 Logging out...");
-    
+
     try {
       const token = localStorage.getItem('authToken');
-      
+
       if (token) {
         // ✅ استدعاء logout API
         await authAPI.logout(token);
         console.log('✅ Logout successful from server');
       }
+
+      // Track successful logout
+      trackAuthEvent('logout', 'success');
     } catch (error) {
       console.error('❌ Logout API error:', error);
-      // نستمر في الـ logout حتى لو فشل الـ API call
+      // Track logout even if API fails
+      trackAuthEvent('logout', 'success');
     } finally {
       // ✅ حذف البيانات من localStorage
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      
+
       // تحديث الحالة
       setUser(null);
       setIsDropdownOpen(false);
-      
+
       // الانتقال إلى صفحة تسجيل الدخول
       navigate('/login');
     }
+  };
+
+  const handleLoginClick = () => {
+    trackCTAClick('Log In', 'header', '/login');
+    navigate('/login');
+  };
+
+  const handleSignUpClick = () => {
+    trackCTAClick('Sign Up', 'header', '/signup');
+    navigate('/signup');
   };
 
   // ✅ دالة لعرض اسم المستخدم من firstName و lastName
@@ -147,16 +162,16 @@ const Header = () => {
               )}
             </div>
           ) : (
-         
+
             <div className="flex items-center gap-4">
-              <button 
-                onClick={() => navigate('/login')} 
+              <button
+                onClick={handleLoginClick}
                 className="text-gray-700 hover:text-[#7B18C7] transition-colors font-medium"
               >
                 Log In
               </button>
-              <button 
-                onClick={() => navigate('/signup')} 
+              <button
+                onClick={handleSignUpClick}
                 className="bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-[#7B18C7] transition-colors font-medium"
               >
                 Sign Up

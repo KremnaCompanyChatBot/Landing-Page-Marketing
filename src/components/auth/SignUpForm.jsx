@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import TermsModal from '../common/TermsModal';
 import PrivacyModal from '../common/PrivacyModal';
 import { authAPI } from '../../utils/api';
+import { trackAuthEvent, trackFormEvent } from '../../utils/analytics';
 
 const SignUpForm = () => {
   const navigate = useNavigate();
@@ -31,7 +32,10 @@ const SignUpForm = () => {
     e.preventDefault();
     setErrors({});
     setSuccess('');
-    
+
+    // Track form submit
+    trackFormEvent('signup_form', 'submit');
+
     const newErrors = {};
 
     if (!signUpData.firstName) newErrors.firstName = 'Please fill out this field';
@@ -68,6 +72,8 @@ const SignUpForm = () => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      // Track form validation error
+      trackFormEvent('signup_form', 'error', 'validation_error');
       return;
     }
 
@@ -84,13 +90,17 @@ const SignUpForm = () => {
       };
 
       console.log('📤 Sending registration data:', requestData);
-      
+
       const response = await authAPI.register(requestData);
 
       console.log('✅ Registration response:', response);
 
       if (response.success) {
         setSuccess(response.message || 'Account created successfully! Redirecting to login…');
+
+        // Track successful signup
+        trackAuthEvent('signup', 'success');
+
         setTimeout(() => {
           navigate('/login');
         }, 2000);
@@ -100,6 +110,10 @@ const SignUpForm = () => {
       setErrors({
         general: err.message || 'Something went wrong. Please try again.'
       });
+
+      // Track failed signup
+      trackAuthEvent('signup', 'failed');
+      trackFormEvent('signup_form', 'error', 'api_error');
     } finally {
       setIsLoading(false);
     }
@@ -253,7 +267,7 @@ const SignUpForm = () => {
           </button>
         </form>
         
-        <button onClick={handleGoogleSignUp} className="google-btn">
+        {/* <button onClick={handleGoogleSignUp} className="google-btn">
           <svg viewBox="0 0 24 24" width="20" height="20">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -262,7 +276,7 @@ const SignUpForm = () => {
           </svg>
           Sign up with Google
         </button>
-        
+         */}
         <div className="switch-text">
           <span>Already have an account? </span>
           <Link to="/login">Log In</Link>

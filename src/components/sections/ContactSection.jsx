@@ -1,8 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import contactImage from '../../assets/images/content.png';
+import { trackLinkClick } from '../../utils/analytics';
 
 const ContactSection = () => {
+  const handleEmailClick = () => {
+    trackLinkClick('email', 'support@kremna.com', 'contact_section');
+  };
+
+  const handlePhoneClick = () => {
+    trackLinkClick('phone', '+905073818048', 'contact_section');
+  };
+
   // أنيميشن للعنوان الرئيسي
   const titleVariants = {
     hidden: {
@@ -56,7 +65,7 @@ const ContactSection = () => {
   };
 
   return (
-    <section className="w-full min-h-screen bg-gradient-to-br from-[#f8fdfd] to-white flex items-center justify-center py-20 px-6 overflow-hidden">
+    <section id="contact" className="w-full min-h-screen bg-gradient-to-br from-[#f8fdfd] to-white flex items-center justify-center py-20 px-6 overflow-hidden">
       <div className="max-w-7xl w-full mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center">
 
@@ -84,23 +93,23 @@ const ContactSection = () => {
                   scale: [0, 1.5, 1],
                   opacity: [0, 1, 0.7],
                   x: 0,
-                  y: 0
+                  y: 0,
+                  transition: {
+                    duration: 0.5,
+                    delay: i * 0.08,
+                    ease: "easeOut"
+                  }
                 }}
                 viewport={{ once: true }}
-                transition={{
-                  duration: 0.5,
-                  delay: i * 0.08,
-                  ease: "easeOut"
-                }}
                 animate={{
                   y: [0, -25, 0],
                   x: [0, Math.sin(i) * 10, 0],
-                  opacity: [0.7, 0.4, 0.7]
-                }}
-                transition={{
-                  duration: 3 + i * 0.3,
-                  repeat: Infinity,
-                  ease: "easeInOut"
+                  opacity: [0.7, 0.4, 0.7],
+                  transition: {
+                    duration: 3 + i * 0.3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }
                 }}
               />
             ))}
@@ -229,6 +238,7 @@ const ContactSection = () => {
               </h3>
               <motion.a
                 href="mailto:support@kremna.com"
+                onClick={handleEmailClick}
                 className="text-lg lg:text-xl inline-block"
                 style={{
                   color: '#000000',
@@ -262,6 +272,7 @@ const ContactSection = () => {
               </h3>
               <motion.a
                 href="tel:+905073818048"
+                onClick={handlePhoneClick}
                 className="text-lg lg:text-xl inline-block"
                 style={{
                   color: '#000000',

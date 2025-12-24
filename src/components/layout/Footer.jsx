@@ -53,14 +53,14 @@ const Footer = ({ variant = 'detailed' }) => {
 
   const navigationLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Features', path: '/features' },
+    { name: 'Features', path: '/#features' },
     { name: 'Pricing', path: '/pricing' },
-    { name: 'Contact', path: '/contact' }
+    { name: 'Contact', path: '/#contact' }
   ];
 
   const companyLinks = [
-    { name: 'About Us', path: '/about' },
-    { name: 'FAQ', path: '/faq' }
+    { name: 'About Us', path: '/#about' },
+    { name: 'FAQ', path: '/#faq' }
   ];
 
   // Simple Footer for Login/SignUp pages
@@ -132,12 +132,12 @@ const Footer = ({ variant = 'detailed' }) => {
             <p className="text-sm text-gray-300 leading-relaxed">
               Designed with love, built with care.
             </p>
-            <Link 
-              to="/contact" 
+            <a
+              href="/#contact"
               className="text-sm text-gray-300 hover:text-[#4ECDC4] transition-colors inline-block"
             >
               Contact Us - Need assistance? Our team is ready to help.
-            </Link>
+            </a>
           </div>
 
           {/* Navigation Links */}
@@ -146,12 +146,21 @@ const Footer = ({ variant = 'detailed' }) => {
             <ul className="space-y-3">
               {navigationLinks.map((link) => (
                 <li key={link.name}>
-                  <Link
-                    to={link.path}
-                    className="text-sm text-gray-300 hover:text-[#4ECDC4] transition-colors"
-                  >
-                    {link.name}
-                  </Link>
+                  {link.path.includes('#') ? (
+                    <a
+                      href={link.path}
+                      className="text-sm text-gray-300 hover:text-[#4ECDC4] transition-colors"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.path}
+                      className="text-sm text-gray-300 hover:text-[#4ECDC4] transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -163,12 +172,21 @@ const Footer = ({ variant = 'detailed' }) => {
             <ul className="space-y-3">
               {companyLinks.map((link) => (
                 <li key={link.name}>
-                  <Link
-                    to={link.path}
-                    className="text-sm text-gray-300 hover:text-[#4ECDC4] transition-colors"
-                  >
-                    {link.name}
-                  </Link>
+                  {link.path.includes('#') ? (
+                    <a
+                      href={link.path}
+                      className="text-sm text-gray-300 hover:text-[#4ECDC4] transition-colors"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.path}
+                      className="text-sm text-gray-300 hover:text-[#4ECDC4] transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

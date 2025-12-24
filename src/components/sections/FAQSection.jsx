@@ -25,7 +25,7 @@ const FAQSection = () => {
   ];
 
   return (
-    <section className=" bg-white flex items-center justify-center py-16 md:py-24  px-4 lg:px-8 overflow-hidden">
+    <section id="faq" className=" bg-white flex items-center justify-center py-16 md:py-24  px-4 lg:px-8 overflow-hidden">
       <div className="max-w-7xl   relative">
         
         {/* العنوان الرئيسي */}

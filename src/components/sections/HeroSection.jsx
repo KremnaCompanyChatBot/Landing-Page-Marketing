@@ -2,9 +2,28 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Button from '../common/Button';
+import { trackCTAClick } from '../../utils/analytics';
 
 const HeroSection = () => {
   const navigate = useNavigate();
+
+  const handleGetStartedClick = () => {
+    trackCTAClick('Let\'s Get Started', 'hero_section', '/signup');
+    navigate('/signup');
+  };
+
+  const handleHowItWorksClick = () => {
+    trackCTAClick('Read How It Works', 'hero_section', '#how-it-works');
+
+    // Smooth scroll to How It Works section
+    const section = document.getElementById('how-it-works');
+    if (section) {
+      section.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
 
   return (
     <section className="bg-gray-50 py-16 md:py-24">
@@ -19,10 +38,10 @@ const HeroSection = () => {
               All-in-one platform to create and manage intelligent assistants websites and apps with a powerful and easy-to-use tool.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="primary" onClick={() => navigate('/signup')}>
+              <Button variant="primary" onClick={handleGetStartedClick}>
                 Let's get started
               </Button>
-              <Button variant="secondary">
+              <Button variant="secondary" onClick={handleHowItWorksClick}>
                 Read how it works
               </Button>
             </div>

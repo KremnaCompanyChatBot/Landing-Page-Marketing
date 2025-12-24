@@ -62,24 +62,24 @@ const BenefitsSection = () => {
   const cardVariants = {
     hiddenLeft: {
       opacity: 0,
-      x: -300, // من خارج الشاشة تماماً من اليسار
+      x: -100, // تقليل المسافة للموبايل
     },
     hiddenRight: {
       opacity: 0,
-      x: 300, // من خارج الشاشة تماماً من اليمين
+      x: 100, // تقليل المسافة للموبايل
     },
     visible: {
       opacity: 1,
       x: 0,
       transition: {
-        duration: 2.5, // السرعة - كلما أقل كلما أسرع
+        duration: 0.8, // أسرع بكثير
         ease: "easeOut" // أكثر سلاسة
       }
     }
   };
 
   return (
-    <section className="bg-[#F2F4F8] py-[80px] flex justify-center overflow-hidden">
+    <section className="bg-[#F2F4F8] py-[80px] flex justify-center overflow-x-hidden">
       <div className="w-full max-w-[1440px] px-4">
         {/* Header Section */}
         <motion.div 
@@ -120,7 +120,7 @@ const BenefitsSection = () => {
               style={{ minHeight: '116px' }}
               initial={index % 2 === 0 ? "hiddenLeft" : "hiddenRight"}
               whileInView="visible"
-              viewport={{ once: false, amount: 0.3 }}
+              viewport={{ once: true, amount: 0.2 }}
               variants={cardVariants}
               whileHover={{
                 scale: 1.02,
