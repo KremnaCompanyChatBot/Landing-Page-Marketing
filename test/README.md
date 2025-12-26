@@ -1,0 +1,494 @@
+# 🤖 Kremna ChatBot - Landing Page & Marketing Platform
+
+[![Deploy to DigitalOcean](https://github.com/KremnaCompanyChatBot/Landing-Page-Marketing/actions/workflows/deploy.yml/badge.svg)](https://github.com/KremnaCompanyChatBot/Landing-Page-Marketing/actions/workflows/deploy.yml)
+
+Modern, full-stack AI chatbot platform with automated CI/CD deployment.
+
+## 🌐 Live Demo
+
+- **Frontend:** http://167.99.141.138
+- **Backend API:** http://167.99.141.138/api
+- **API Documentation:** [See API Endpoints](#-api-endpoints)
+
+---
+
+## 🏗️ Architecture
+```
+┌─────────────────────────────────────────────────────┐
+│                    Nginx Reverse Proxy               │
+│                 (Port 80 - Public Access)            │
+└─────────────────┬───────────────────────────────────┘
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+        ▼                   ▼
+┌──────────────┐    ┌──────────────┐
+│   Frontend   │    │   Backend    │
+│  React+Vite  │    │   NestJS     │
+│   Port 8080  │    │   Port 3000  │
+└──────────────┘    └───────┬──────┘
+                            │
+                            ▼
+                    ┌──────────────┐
+                    │  PostgreSQL  │
+                    │   Port 5432  │
+                    └──────────────┘
+```
+
+---
+
+## 🚀 Tech Stack
+
+### Frontend
+- **Framework:** React 18
+- **Build Tool:** Vite 5
+- **Styling:** Tailwind CSS
+- **State Management:** React Hooks
+- **Routing:** React Router v6
+
+### Backend
+- **Framework:** NestJS (Node.js 20)
+- **Database:** PostgreSQL 15
+- **ORM:** TypeORM
+- **Authentication:** JWT + Passport.js
+- **Mail Service:** @nestjs-modules/mailer
+- **Validation:** class-validator
+
+### Infrastructure
+- **Server:** DigitalOcean Ubuntu 24.04 LTS
+- **Containerization:** Docker + Docker Compose
+- **Web Server:** Nginx 1.24
+- **CI/CD:** GitHub Actions
+- **Version Control:** Git + GitHub
+
+---
+
+## 📦 Project Structure
+```
+.
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # CI/CD pipeline
+├── backend/                     # NestJS Backend
+│   ├── src/
+│   │   ├── auth/               # Authentication module
+│   │   ├── user/               # User management
+│   │   ├── mail/               # Email service
+│   │   ├── app.module.ts
+│   │   └── main.ts
+│   ├── Dockerfile              # Backend container config
+│   ├── package.json
+│   └── .env                    # Environment variables (not in git)
+├── frontend/                   # React Frontend
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── utils/
+│   │   │   └── api.js         # API client
+│   │   └── App.jsx
+│   ├── Dockerfile             # Frontend container config
+│   ├── nginx.conf             # Nginx config for SPA
+│   └── package.json
+├── db/
+│   └── init-user-schema.sql   # Database initialization
+├── docker-compose.yml         # Container orchestration
+└── README.md
+```
+
+---
+
+## 🛠️ Local Development
+
+### Prerequisites
+
+- Node.js 20+
+- Docker & Docker Compose
+- Git
+
+### Setup
+
+1. **Clone the repository:**
+```bash
+   git clone https://github.com/KremnaCompanyChatBot/Landing-Page-Marketing.git
+   cd Landing-Page-Marketing
+```
+
+2. **Backend Setup:**
+```bash
+   git checkout backend-v3
+   cd backend
+   npm install
+   
+   # Create .env file
+   cp .env.example .env
+   # Edit .env with your configuration
+```
+
+3. **Frontend Setup:**
+```bash
+   git checkout feature/frontend-version2
+   npm install
+   npm run dev
+```
+
+4. **Run with Docker:**
+```bash
+   git checkout main
+   docker-compose up -d
+```
+
+   Services will be available at:
+   - Frontend: http://localhost:8080
+   - Backend: http://localhost:3000
+   - Database: localhost:5432
+
+---
+
+## 🌍 Production Deployment
+
+### Server Requirements
+
+- Ubuntu 24.04 LTS
+- 2GB RAM minimum
+- 2 CPU cores
+- 20GB storage
+- Docker & Docker Compose installed
+
+### Deployment Steps
+
+1. **Automated Deployment (Recommended):**
+   
+   Push to `main` branch triggers automatic deployment:
+```bash
+   git push origin main
+```
+
+2. **Manual Deployment:**
+   
+   SSH into server:
+```bash
+   ssh root@167.99.141.138
+   cd /var/www/kremna
+   
+   # Pull latest code
+   git pull origin main
+   
+   # Rebuild containers
+   docker-compose down
+   docker-compose build --no-cache
+   docker-compose up -d
+```
+
+### Environment Variables
+
+Backend `.env` file:
+```env
+# Database
+DB_HOST=db
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_secure_password
+DB_DATABASE=kremna_db
+
+# JWT
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRATION=7d
+
+# Mail (Gmail SMTP)
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USER=your-email@gmail.com
+MAIL_PASS=your-app-password
+MAIL_FROM="Kremna Support <support@kremna.com>"
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# CORS
+CORS_ORIGIN=http://167.99.141.138,http://localhost:5173
+
+# App
+NODE_ENV=production
+PORT=3000
+```
+
+---
+
+## 🔌 API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/register` | User registration | No |
+| POST | `/api/login` | User login | No |
+| POST | `/api/logout` | User logout | Yes |
+| POST | `/api/auth/google` | Google OAuth login | No |
+
+### User Management
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/user` | Get current user | Yes |
+| GET | `/api/user/profile` | Get user profile | Yes |
+| PUT | `/api/user/profile` | Update profile | Yes |
+| PUT | `/api/user/change-password` | Change password | Yes |
+| DELETE | `/api/user/account` | Delete account | Yes |
+
+### Password Reset
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/forgot-password` | Request password reset | No |
+| POST | `/api/reset-password` | Reset password | No |
+
+### Example Requests
+
+**Register:**
+```bash
+curl -X POST http://167.99.141.138/api/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "password": "Password123!"
+  }'
+```
+
+**Login:**
+```bash
+curl -X POST http://167.99.141.138/api/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "password": "Password123!"
+  }'
+```
+
+**Get Profile (with token):**
+```bash
+curl -X GET http://167.99.141.138/api/user/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+---
+
+## 🔄 CI/CD Pipeline
+
+### Workflow
+
+Automated deployment on push to `main` branch:
+
+1. **Checkout code** from repository
+2. **SSH into server** using GitHub Secrets
+3. **Pull latest changes** from backend-v3 and feature/frontend-version2
+4. **Rebuild Docker containers** with no cache
+5. **Start services** with Docker Compose
+6. **Clean up** old images and containers
+7. **Health check** to verify deployment
+
+### GitHub Secrets Required
+
+| Secret | Description |
+|--------|-------------|
+| `DO_HOST` | Server IP address (167.99.141.138) |
+| `DO_USERNAME` | SSH username (root) |
+| `DO_SSH_KEY` | Private SSH key for authentication |
+
+### Monitoring Deployment
+
+View deployment logs:
+```bash
+# GitHub Actions
+https://github.com/KremnaCompanyChatBot/Landing-Page-Marketing/actions
+
+# Server logs
+ssh root@167.99.141.138
+cd /var/www/kremna
+docker-compose logs -f
+```
+
+---
+
+## 🐳 Docker Commands
+
+### Container Management
+```bash
+# View running containers
+docker ps
+
+# View all containers (including stopped)
+docker ps -a
+
+# View logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f db
+
+# Restart services
+docker-compose restart backend
+docker-compose restart frontend
+
+# Stop all services
+docker-compose down
+
+# Rebuild and restart
+docker-compose up -d --build
+
+# Clean up
+docker system prune -f
+```
+
+### Database Management
+```bash
+# Access PostgreSQL container
+docker exec -it kremna_postgres psql -U postgres -d kremna_db
+
+# SQL commands
+\dt                    # List tables
+\d user               # Describe user table
+SELECT * FROM "user"; # Query users
+\q                    # Exit
+```
+
+---
+
+## 🔒 Security
+
+### Production Checklist
+
+- [ ] Change default database password
+- [ ] Generate strong JWT secret
+- [ ] Configure Gmail App Password for SMTP
+- [ ] Set up Google OAuth credentials
+- [ ] Enable UFW firewall
+- [ ] Configure SSL/TLS (Let's Encrypt)
+- [ ] Disable root SSH login
+- [ ] Set up automated backups
+- [ ] Configure fail2ban
+- [ ] Regular security updates
+
+### Firewall Setup
+```bash
+ufw allow 22
+ufw allow 80
+ufw allow 443
+ufw enable
+```
+
+---
+
+## 📊 Monitoring
+
+### Health Check
+```bash
+# Frontend
+curl http://167.99.141.138/
+
+# Backend
+curl http://167.99.141.138/api
+
+# Database connection
+docker exec kremna_postgres pg_isready -U postgres
+```
+
+### Performance
+```bash
+# Container stats
+docker stats
+
+# Disk usage
+df -h
+
+# Memory usage
+free -h
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Backend not starting:**
+```bash
+# Check logs
+docker-compose logs backend
+
+# Restart container
+docker-compose restart backend
+
+# Rebuild if needed
+docker-compose build --no-cache backend
+```
+
+**CORS errors:**
+- Check `.env` CORS_ORIGIN setting
+- Verify Nginx configuration
+- Ensure backend CORS config in `main.ts`
+
+**Database connection issues:**
+```bash
+# Check database is running
+docker ps | grep postgres
+
+# Check database logs
+docker-compose logs db
+
+# Restart database
+docker-compose restart db
+```
+
+**502 Bad Gateway:**
+- Backend container not running
+- Check backend logs
+- Verify backend is listening on port 3000
+
+---
+
+## 📚 Additional Resources
+
+- [NestJS Documentation](https://docs.nestjs.com/)
+- [React Documentation](https://react.dev/)
+- [Docker Documentation](https://docs.docker.com/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+
+---
+
+## 👥 Team
+
+**DevOps Engineer:** Beyza Nur Damar
+- Infrastructure setup
+- CI/CD pipeline implementation
+- Server configuration and maintenance
+
+**Backend Team:** NestJS API development
+**Frontend Team:** React UI/UX implementation
+
+
+
+## 🤝 Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Test locally
+4. Submit a pull request
+5. Wait for CI/CD to pass
+6. Merge to main triggers deployment
+
+---
+
+## 📧 Support
+
+For technical issues or questions:
+- Open a GitHub issue
+- Contact DevOps team
+- Check troubleshooting section
+
+---
+
+**Last Updated:** December 2025
+**Status:** ✅ Production Ready

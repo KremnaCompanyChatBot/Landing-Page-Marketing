@@ -1,0 +1,54 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cd /var/www/kremna
+            
+            echo "🚀 Starting deployment..."
+            
+            echo "🔄 Pulling backend code..."
+            rm -rf temp-backend
+            git clone -b backend-v3 https://github.com/KremnaCompanyChatBot/Landing-Page-Marketing.git temp-backend
+            rm -rf backend/src backend/package.json
+            cp -r temp-backend/backend/src backend/
+            cp temp-backend/backend/package.json backend/
+            rm -rf temp-backend
+            
+            echo "🔄 Pulling frontend code..."
+            rm -rf temp-frontend
+            git clone -b feature/frontend-version2 https://github.com/KremnaCompanyChatBot/Landing-Page-Marketing.git temp-frontend
+            rm -rf frontend/src frontend/public frontend/package.json
+            cp -r temp-frontend/src frontend/
+            cp -r temp-frontend/public frontend/
+            cp temp-frontend/package.json frontend/
+            rm -rf temp-frontend
+            
+            echo "🐳 Rebuilding containers..."
+            docker-compose down
+            docker-compose build --no-cache
+            docker-compose up -d
+            
+            echo "🧹 Cleaning up..."
+            docker system prune -f
+            
+            echo "✅ Deployment completed!"
+            docker ps
