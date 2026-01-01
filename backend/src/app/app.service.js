@@ -6,13 +6,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GoogleOAuthGuard = void 0;
+exports.AppService = void 0;
 const common_1 = require("@nestjs/common");
-const passport_1 = require("@nestjs/passport");
-let GoogleOAuthGuard = class GoogleOAuthGuard extends (0, passport_1.AuthGuard)('google') {
+let AppService = class AppService {
+    getHello() {
+        return 'Hello World!';
+    }
 };
-exports.GoogleOAuthGuard = GoogleOAuthGuard;
-exports.GoogleOAuthGuard = GoogleOAuthGuard = __decorate([
+exports.AppService = AppService;
+exports.AppService = AppService = __decorate([
     (0, common_1.Injectable)()
-], GoogleOAuthGuard);
-//# sourceMappingURL=google-oauth.guard.js.map
+], AppService);
+//# sourceMappingURL=app.service.js.map

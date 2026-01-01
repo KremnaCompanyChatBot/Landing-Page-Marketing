@@ -13,6 +13,7 @@ import { MailService } from '../mail/mail.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
+
 @Injectable()
 export class UserService {
   constructor(
@@ -30,7 +31,7 @@ export class UserService {
     return profile;
   }
 
-  async updateProfile(userId: string, updateData: UpdateProfileDto | any) {
+  async updateProfile(userId: string, updateData: UpdateProfileDto) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -45,18 +46,11 @@ export class UserService {
       }
     }
 
-    // support either separate first/last name or a single fullName field
-    if (updateData.fullName && !updateData.firstName && !updateData.lastName) {
-      const parts = updateData.fullName.trim().split(/\s+/);
-      user.firstName = parts[0];
-      user.lastName = parts.slice(1).join(' ') || '';
-    }
-
     if (updateData.firstName) user.firstName = updateData.firstName;
     if (updateData.lastName) user.lastName = updateData.lastName;
     if (updateData.phoneNumber) user.phoneNumber = updateData.phoneNumber;
     if (updateData.companyName) user.companyName = updateData.companyName;
-    if (updateData.email) user.email = updateData.email?.toLowerCase().trim();
+    if (updateData.email) user.email = updateData.email;
 
     await this.userRepository.save(user);
     return user;
@@ -70,17 +64,12 @@ export class UserService {
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user || !user.password) {
-      throw new NotFoundException('User not found or local password not set');
+      throw new NotFoundException('User not found');
     }
 
     const isPasswordValid = await user.validatePassword(currentPassword);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
-    }
-
-    const isSamePassword = await bcrypt.compare(newPassword, user.password);
-    if (isSamePassword) {
-      throw new BadRequestException('New password must be different from current password');
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
@@ -99,6 +88,14 @@ export class UserService {
 
   async findByEmail(email: string) {
     return this.userRepository.findOne({ where: { email: email.toLowerCase().trim() } });
+  }
+
+  async findOneById(id: string) {
+    return this.userRepository.findOne({ where: { id } });
+  }
+
+  async findOneByEmail(email: string) {
+    return this.findByEmail(email);
   }
 
   async saveResetToken(userId: string, token: string, expires: Date) {
@@ -144,19 +141,8 @@ export class UserService {
     return 'If your email is registered, you will receive a password reset link';
   }
 
-  async findOneById(id: string) {
-    return this.userRepository.findOne({ where: { id } });
-  }
-
-  async findOneByEmail(email: string) {
-    return this.findByEmail(email);
-  }
-
   async create(userData: any) {
-    const user = this.userRepository.create(userData) as unknown as User;
-    if (userData.password) {
-      user.password = await bcrypt.hash(userData.password, 10);
-    }
+    const user = this.userRepository.create(userData);
     return this.userRepository.save(user);
   }
 }

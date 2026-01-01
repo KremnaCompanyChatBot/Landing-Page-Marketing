@@ -58,16 +58,6 @@ export class AuthController {
     return this.authService.login(body.email, body.password);
   }
 
-  @Post('auth/google')
-  @HttpCode(HttpStatus.OK)
-  async googleLogin(@Body() body: any = {}) {
-    const { googleToken } = body;
-    if (!googleToken) {
-      throw new BadRequestException('googleToken is required.');
-    }
-    return this.authService.validateGoogleTokenAndLogin(googleToken);
-  }
-
   @UseGuards(JwtAuthGuard)
   @Get('user')
   @HttpCode(HttpStatus.OK)

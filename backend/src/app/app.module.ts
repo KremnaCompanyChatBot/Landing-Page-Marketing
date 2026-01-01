@@ -4,10 +4,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
-import { User } from './user/entities/user.entity';
-import { MailModule } from './mail/mail.module';
+import { AuthModule } from '../auth/auth.module';
+import { UserModule } from '../user/user.module';
+import { User } from '../user/entities/user.entity';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [

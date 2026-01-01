@@ -30,12 +30,6 @@ export class User {
   @Column({ nullable: true })
   phoneNumber: string;
 
-  @Column({ nullable: true })
-  googleId: string;
-
-  @Column({ default: false })
-  isGoogleUser: boolean;
-
   @Column({ type: 'varchar', nullable: true, default: null })
   resetPasswordToken: string | null;
 

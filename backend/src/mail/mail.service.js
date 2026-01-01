@@ -1,33 +1,46 @@
-"use strict";
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.MailService = void 0;
-const common_1 = require("@nestjs/common");
-const mailer_1 = require("@nestjs-modules/mailer");
-let MailService = class MailService {
-    mailerService;
-    constructor(mailerService) {
-        this.mailerService = mailerService;
+import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { MailerService } from '@nestjs-modules/mailer';
+
+@Injectable()
+export class MailService {
+  private readonly logger = new Logger(MailService.name);
+
+  constructor(private readonly mailerService: MailerService) {}
+
+  async sendPasswordReset(email: string, token: string) {
+    // Frontend URL'ini environment variable'dan alalım, yoksa varsayılanı kullanalım.
+    // DevOps bu değişkeni Render'da ayarlamalı: FRONTEND_URL=https://kremna-app.vercel.app
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${token}`; // Token'ı URL parametresi değil path parametresi olarak gönderelim (Frontend rotasına uygun)
+
+    this.logger.log(`Attempting to send password reset email to: ${email}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Kremna - Password Reset Request',
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #4ECDC4; text-align: center;">Password Reset</h2>
+            <p>Hello,</p>
+            <p>We received a request to reset your password. Click the button below to proceed:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" style="background-color: #4ECDC4; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+            </div>
+            <p style="font-size: 14px; color: #666;">If you did not request this, please ignore this email. This link is valid for 1 hour.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin-top: 20px;">
+            <p style="text-align: center; font-size: 12px; color: #999;">© 2025 Kremna Automation Team</p>
+          </div>
+        `,
+      });
+      
+      this.logger.log(`Email successfully sent to ${email}`);
+    } catch (error) {
+      // Hatanın detayını loglayalım
+      this.logger.error(`FAILED to send email to ${email}. Error: ${error.message}`, error.stack);
+      
+      // Kullanıcıya genel bir hata dönelim ama sunucuyu çökertmeyelim
+      throw new InternalServerErrorException('Failed to send email. Please try again later.');
     }
-    async sendPasswordReset(email, link) {
-        await this.mailerService.sendMail({
-            to: email,
-            subject: 'Password Reset',
-            html: `<p>You requested a password reset.</p><p><a href="${link}">${link}</a></p>`,
-        });
-    }
-};
-exports.MailService = MailService;
-exports.MailService = MailService = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [mailer_1.MailerService])
-], MailService);
-//# sourceMappingURL=mail.service.js.map
+  }
+}
