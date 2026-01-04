@@ -1,126 +1,111 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../user/user.service';
-import * as crypto from 'crypto';
-import { OAuth2Client } from 'google-auth-library';
-
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { User } from '../user/entities/user.entity';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private userService: UserService,
-    private jwtService: JwtService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async login(email: string, password: string) {
+  async register(registerDto: RegisterDto) {
+    const { email, password, firstName, lastName, companyName, phoneNumber } = registerDto;
+
+    const existingUser = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('This email is already registered.');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = this.userRepository.create({
+      email,
+      password: hashedPassword,
+      firstName,
+      lastName,
+      companyName,
+      phoneNumber,
+      isGoogleUser: false,
+    });
+
+    await this.userRepository.save(user);
+
+    return {
+      success: true,
+      message: 'User registered successfully',
+    };
+  }
+
+  async login(loginDto: LoginDto) {
+    const { email, password } = loginDto;
+
     console.log('[AuthService] Login attempt for email:', email);
-    const user = await this.userService.findByEmail(email);
+
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
+
     if (!user) {
       console.log('[AuthService] User not found for email:', email);
       throw new UnauthorizedException('Invalid credentials');
     }
-    console.log('[AuthService] User found:', {
-      id: user.id,
-      email: user.email,
-      hasPassword: !!user.password,
-      isGoogleUser: user.isGoogleUser,
-    });
-    if (user.isGoogleUser && !user.password) {
-      console.log('[AuthService] User is Google-only user without password');
-      throw new BadRequestException('This account was created with Google. Please use Google Sign-In.');
+
+    if (!user.password) {
+      console.log('[AuthService] User has no password set');
+      throw new BadRequestException('Please use alternative login method');
     }
-    console.log('[AuthService] Validating password...');
-    const isPasswordValid = await user.validatePassword(password);
-    console.log('[AuthService] Password valid:', isPasswordValid);
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
     if (!isPasswordValid) {
+      console.log('[AuthService] Invalid password for user:', email);
       throw new UnauthorizedException('Invalid credentials');
     }
-    const payload = { sub: user.id, email: user.email };
+
+    const payload = { 
+      sub: user.id, 
+      email: user.email,
+      isGoogleUser: user.isGoogleUser,
+    };
     const token = this.jwtService.sign(payload);
-    console.log('[AuthService] Login successful, token generated');
+
+    console.log('[AuthService] Login successful for user:', email);
+
     return {
-      success: true,
-      token,
+      access_token: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
     };
   }
 
-  async validateGoogleTokenAndLogin(googleToken: string) {
-    try {
-      const ticket = await googleClient.verifyIdToken({
-        idToken: googleToken,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-      const payload = ticket.getPayload();
-      if (!payload || !payload.email) {
-        throw new BadRequestException('Invalid Google token');
-      }
-      const googleUser = {
-        googleId: payload.sub,
-        email: payload.email,
-        firstName: payload.given_name || 'User',
-        lastName: payload.family_name || '',
-      };
-      const user = await this.findOrCreateGoogleUser(googleUser);
-      if (!user) {
-        throw new BadRequestException('Failed to create or find user');
-      }
-      const jwtPayload = { sub: user.id, email: user.email };
-      const token = this.jwtService.sign(jwtPayload);
-      return {
-        success: true,
-        token,
-      };
-    } catch (error) {
-      throw new BadRequestException('Google authentication failed');
-    }
-  }
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
 
-  async findOrCreateGoogleUser(googleUser: any) {
-    let user = await this.userService.findByEmail(googleUser.email);
-    if (!user) {
-      const result = await this.userService.create({
-        email: googleUser.email,
-        firstName: googleUser.firstName,
-        lastName: googleUser.lastName,
-        googleId: googleUser.googleId,
-        isGoogleUser: true,
-      });
-      user = Array.isArray(result) ? result[0] : result;
-    } else if (!user.isGoogleUser) {
-      user.googleId = googleUser.googleId;
-      user.isGoogleUser = true;
-      const result = await this.userService.create(user);
-      user = Array.isArray(result) ? result[0] : result;
+    if (user && (await bcrypt.compare(password, user.password))) {
+      const { password, ...result } = user;
+      return result;
     }
-    return user;
-  }
-
-  async forgotPassword(forgotPasswordDto: any) {
-    const { email } = forgotPasswordDto;
-    const message = await this.userService.forgotPassword(email);
-    return { message };
-  }
-
-  async verifyResetToken(token: string) {
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    const user = await this.userService.findByResetToken(hashedToken);
-    if (!user) {
-      return { valid: false, message: 'Invalid or expired token' };
-    }
-    if (user.resetPasswordExpires && user.resetPasswordExpires < new Date()) {
-      return { valid: false, message: 'Token expired' };
-    }
-    return { valid: true, message: 'Token is valid' };
-  }
-
-  async resetPassword(resetPasswordDto: any) {
-    const { token, newPassword, confirmPassword } = resetPasswordDto;
-    if (newPassword !== confirmPassword) {
-      throw new BadRequestException('Passwords do not match');
-    }
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    await this.userService.resetPassword(hashedToken, newPassword);
-    return { message: 'Password reset successfully' };
+    return null;
   }
 }
