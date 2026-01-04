@@ -58,7 +58,6 @@ export class AuthController {
     return this.authService.login(body.email, body.password);
   }
 
-  @Post('auth/google')
   @HttpCode(HttpStatus.OK)
   async googleLogin(@Body() body: any = {}) {
     const { googleToken } = body;
